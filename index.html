@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcards de Estudo</title>
+    <title>Flashcards de Filosofia</title>
     <style>
         /* ===== Reset e Variáveis ===== */
         * {
@@ -29,6 +29,18 @@
             --shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
+        /* Tema Claro */
+        :root[data-theme="light"] {
+            --bg: #f8fafc;
+            --bg-light: #ffffff;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
         body {
             min-height: 100vh;
             background: linear-gradient(135deg, var(--bg) 0%, #1e1b4b 100%);
@@ -38,6 +50,11 @@
             align-items: center;
             padding: 2rem 1rem;
             overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        :root[data-theme="light"] body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
         }
 
         /* ===== Cabeçalho ===== */
@@ -59,6 +76,12 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
         }
 
         .btn {
@@ -104,10 +127,58 @@
             background: #dc2626;
         }
 
+        .btn-icon {
+            padding: 0.75rem;
+            width: 44px;
+            height: 44px;
+            justify-content: center;
+        }
+
         .btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             transform: none !important;
+        }
+
+        /* ===== Filtros e Busca ===== */
+        .filters {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
         }
 
         /* ===== Container Principal ===== */
@@ -190,6 +261,10 @@
             color: var(--text-dark);
         }
 
+        :root[data-theme="light"] .card-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        }
+
         .card-back {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
@@ -203,6 +278,22 @@
             opacity: 0.7;
             margin-bottom: 1rem;
             font-weight: 600;
+        }
+
+        .card-category {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .card-front .card-category {
+            background: var(--bg-light);
+            color: var(--text-muted);
         }
 
         .card-content {
@@ -305,7 +396,8 @@
             color: var(--text);
         }
 
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 0.75rem 1rem;
             background: var(--bg);
@@ -314,12 +406,16 @@
             color: var(--text);
             font-size: 1rem;
             resize: vertical;
-            min-height: 100px;
             font-family: inherit;
             transition: border-color 0.2s;
         }
 
-        .form-group textarea:focus {
+        .form-group textarea {
+            min-height: 100px;
+        }
+
+        .form-group textarea:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -354,17 +450,47 @@
             .modal {
                 padding: 1.5rem;
             }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Cabeçalho -->
     <header>
-        <h1>📚 Flashcards de Estudo</h1>
-        <button class="btn btn-primary" id="btnAdd">
-            <span>＋</span> Novo Card
-        </button>
+        <h1>🏛️ Flashcards de Filosofia</h1>
+        <div class="header-actions">
+            <button class="btn btn-icon btn-secondary" id="btnTheme" title="Alternar Tema">
+                🌙
+            </button>
+            <button class="btn btn-primary" id="btnAdd">
+                <span>＋</span> Novo Card
+            </button>
+        </div>
     </header>
+
+    <!-- Filtros e Busca -->
+    <div class="filters">
+        <div class="filter-group">
+            <label for="categoryFilter">Período Filosófico</label>
+            <select id="categoryFilter">
+                <option value="all">Todos</option>
+                <option value="pre-socratic">Pré-Socráticos</option>
+                <option value="classical">Período Clássico</option>
+                <option value="hellenistic">Helenismo</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="searchInput">Buscar</label>
+            <input type="text" id="searchInput" placeholder="Digite palavras-chave...">
+        </div>
+    </div>
 
     <!-- Conteúdo Principal -->
     <main>
@@ -380,11 +506,13 @@
         <div class="card-scene" id="cardScene">
             <div class="card" id="card">
                 <div class="card-face card-front">
+                    <div class="card-category" id="frontCategory">Categoria</div>
                     <div class="card-label">Pergunta</div>
                     <div class="card-content" id="frontContent">Carregando...</div>
                     <div class="card-hint">Clique para ver a resposta</div>
                 </div>
                 <div class="card-face card-back">
+                    <div class="card-category" id="backCategory">Categoria</div>
                     <div class="card-label">Resposta</div>
                     <div class="card-content" id="backContent">...</div>
                     <div class="card-hint">Clique para voltar</div>
@@ -395,6 +523,7 @@
         <!-- Controles de Navegação -->
         <div class="controls">
             <button class="btn btn-secondary" id="btnPrev">← Anterior</button>
+            <button class="btn btn-secondary" id="btnShuffle">🔀 Embaralhar</button>
             <button class="btn btn-secondary" id="btnNext">Próximo →</button>
         </div>
 
@@ -406,8 +535,8 @@
 
         <!-- Estado Vazio -->
         <div class="empty-state" id="emptyState" style="display:none;">
-            <h2>Nenhum card ainda</h2>
-            <p>Clique em "Novo Card" para começar a estudar!</p>
+            <h2>Nenhum card encontrado</h2>
+            <p>Ajuste os filtros ou clique em "Novo Card" para começar!</p>
         </div>
     </main>
 
@@ -416,6 +545,14 @@
         <div class="modal">
             <h2 id="modalTitle">Novo Card</h2>
             <form id="cardForm">
+                <div class="form-group">
+                    <label for="categoryInput">Período Filosófico</label>
+                    <select id="categoryInput" required>
+                        <option value="pre-socratic">Pré-Socráticos</option>
+                        <option value="classical">Período Clássico</option>
+                        <option value="hellenistic">Helenismo</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="frontInput">Pergunta (Frente)</label>
                     <textarea id="frontInput" placeholder="Digite a pergunta..." required></textarea>
@@ -434,36 +571,50 @@
 
     <script>
         /* =====================================================
-           APLICATIVO DE FLASHCARDS - JavaScript Puro
+           APLICATIVO DE FLASHCARDS DE FILOSOFIA - JavaScript Puro
            ===================================================== */
 
-        // ===== Chave do localStorage =====
-        const STORAGE_KEY = 'flashcards_data';
+        // ===== Chaves do localStorage =====
+        const STORAGE_KEY = 'flashcards_philosophy_data';
+        const THEME_KEY = 'flashcards_theme';
+
+        // ===== Categorias =====
+        const CATEGORIES = {
+            'pre-socratic': 'Pré-Socráticos',
+            'classical': 'Período Clássico',
+            'hellenistic': 'Helenismo'
+        };
 
         // ===== Estado da Aplicação =====
         const state = {
             cards: [],
+            filteredCards: [],
             currentIndex: 0,
             isFlipped: false,
-            editingId: null // null = criando novo, número = editando existente
+            editingId: null,
+            currentFilter: 'all',
+            searchQuery: ''
         };
 
-        // ===== Massa de Teste (Flashcards de Exemplo) =====
+        // ===== Massa de Teste (Flashcards de Filosofia) =====
         const defaultCards = [
             {
                 id: 1,
-                front: 'O que é o DOM (Document Object Model)?',
-                back: 'É uma interface de programação que representa a estrutura de um documento HTML como uma árvore de objetos, permitindo que scripts manipulem conteúdo, estrutura e estilo dinamicamente.'
+                category: 'pre-socratic',
+                front: 'Qual era a principal questão dos Pré-Socráticos?',
+                back: 'Os Pré-Socráticos buscavam entender a "arché" (princípio primordial) de todas as coisas, investigando a natureza fundamental do cosmos e a origem do universo através da razão, não do mito.'
             },
             {
                 id: 2,
-                front: 'Qual a diferença entre "let", "const" e "var"?',
-                back: '"var" tem escopo de função e sofre hoisting. "let" tem escopo de bloco e pode ser reatribuído. "const" também tem escopo de bloco, mas não pode ser reatribuído (embora objetos possam ter propriedades modificadas).'
+                front: 'O que é a Teoria das Ideias de Platão?',
+                back: 'Platão propôs que existe um mundo inteligível perfeito e imutável das "Ideias" (ou Formas), do qual o mundo sensível é apenas uma cópia imperfeita. As Ideias são as verdadeiras realidades, acessíveis pela razão.',
+                category: 'classical'
             },
             {
                 id: 3,
-                front: 'O que é Flexbox no CSS?',
-                back: 'É um modelo de layout unidimensional que facilita o alinhamento e distribuição de itens em um container, trabalhando com eixos principal e transversal para criar layouts responsivos de forma eficiente.'
+                front: 'Qual o objetivo da filosofia estoica?',
+                back: 'O estoicismo busca alcançar a "apatheia" (ausência de paixões perturbadoras) através da virtude e da aceitação racional do destino. A felicidade vem de viver de acordo com a natureza e a razão, controlando apenas o que está sob nosso domínio.',
+                category: 'hellenistic'
             }
         ];
 
@@ -473,21 +624,28 @@
             cardScene: document.getElementById('cardScene'),
             frontContent: document.getElementById('frontContent'),
             backContent: document.getElementById('backContent'),
+            frontCategory: document.getElementById('frontCategory'),
+            backCategory: document.getElementById('backCategory'),
             progressText: document.getElementById('progressText'),
             progressFill: document.getElementById('progressFill'),
             progressContainer: document.getElementById('progressContainer'),
             emptyState: document.getElementById('emptyState'),
             btnPrev: document.getElementById('btnPrev'),
             btnNext: document.getElementById('btnNext'),
+            btnShuffle: document.getElementById('btnShuffle'),
             btnAdd: document.getElementById('btnAdd'),
             btnEdit: document.getElementById('btnEdit'),
             btnDelete: document.getElementById('btnDelete'),
+            btnTheme: document.getElementById('btnTheme'),
             modal: document.getElementById('modal'),
             modalTitle: document.getElementById('modalTitle'),
             cardForm: document.getElementById('cardForm'),
+            categoryInput: document.getElementById('categoryInput'),
             frontInput: document.getElementById('frontInput'),
             backInput: document.getElementById('backInput'),
-            btnCancel: document.getElementById('btnCancel')
+            btnCancel: document.getElementById('btnCancel'),
+            categoryFilter: document.getElementById('categoryFilter'),
+            searchInput: document.getElementById('searchInput')
         };
 
         // ===== Persistência de Dados =====
@@ -497,7 +655,6 @@
                 if (stored) {
                     state.cards = JSON.parse(stored);
                 } else {
-                    // Primeira execução: carrega massa de teste
                     state.cards = [...defaultCards];
                     saveCards();
                 }
@@ -515,76 +672,132 @@
             }
         }
 
+        // ===== Tema =====
+        function loadTheme() {
+            try {
+                const theme = localStorage.getItem(THEME_KEY) || 'dark';
+                applyTheme(theme);
+            } catch (e) {
+                applyTheme('dark');
+            }
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            elements.btnTheme.textContent = theme === 'dark' ? '🌙' : '☀️';
+            try {
+                localStorage.setItem(THEME_KEY, theme);
+            } catch (e) {
+                console.error('Erro ao salvar tema:', e);
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        }
+
+        // ===== Filtros =====
+        function applyFilters() {
+            state.filteredCards = state.cards.filter(card => {
+                // Filtro por categoria
+                const categoryMatch = state.currentFilter === 'all' || card.category === state.currentFilter;
+                
+                // Filtro por busca
+                const searchMatch = state.searchQuery === '' || 
+                    card.front.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+                    card.back.toLowerCase().includes(state.searchQuery.toLowerCase());
+                
+                return categoryMatch && searchMatch;
+            });
+
+            state.currentIndex = 0;
+            render();
+        }
+
         // ===== Renderização =====
         function render() {
-            // Se não há cards, mostra estado vazio
-            if (state.cards.length === 0) {
+            if (state.filteredCards.length === 0) {
                 elements.cardScene.style.display = 'none';
                 elements.progressContainer.style.display = 'none';
                 elements.btnPrev.style.display = 'none';
                 elements.btnNext.style.display = 'none';
+                elements.btnShuffle.style.display = 'none';
                 elements.btnEdit.style.display = 'none';
                 elements.btnDelete.style.display = 'none';
                 elements.emptyState.style.display = 'block';
                 return;
             }
 
-            // Restaura visibilidade dos elementos
             elements.cardScene.style.display = '';
             elements.progressContainer.style.display = '';
             elements.btnPrev.style.display = '';
             elements.btnNext.style.display = '';
+            elements.btnShuffle.style.display = '';
             elements.btnEdit.style.display = '';
             elements.btnDelete.style.display = '';
             elements.emptyState.style.display = 'none';
 
-            // Garante índice válido
-            if (state.currentIndex >= state.cards.length) {
+            if (state.currentIndex >= state.filteredCards.length) {
                 state.currentIndex = 0;
             }
             if (state.currentIndex < 0) {
-                state.currentIndex = state.cards.length - 1;
+                state.currentIndex = state.filteredCards.length - 1;
             }
 
-            const current = state.cards[state.currentIndex];
+            const current = state.filteredCards[state.currentIndex];
+            const categoryName = CATEGORIES[current.category] || 'Sem Categoria';
 
-            // Atualiza conteúdo do card
             elements.frontContent.textContent = current.front;
             elements.backContent.textContent = current.back;
+            elements.frontCategory.textContent = categoryName;
+            elements.backCategory.textContent = categoryName;
 
-            // Atualiza progresso
-            elements.progressText.textContent = `Card ${state.currentIndex + 1} de ${state.cards.length}`;
-            const percent = (state.cards.length > 0)
-                ? ((state.currentIndex + 1) / state.cards.length) * 100
+            elements.progressText.textContent = `Card ${state.currentIndex + 1} de ${state.filteredCards.length}`;
+            const percent = (state.filteredCards.length > 0)
+                ? ((state.currentIndex + 1) / state.filteredCards.length) * 100
                 : 0;
             elements.progressFill.style.width = percent + '%';
 
-            // Habilita/desabilita botões de navegação
-            elements.btnPrev.disabled = state.cards.length <= 1;
-            elements.btnNext.disabled = state.cards.length <= 1;
+            elements.btnPrev.disabled = state.filteredCards.length <= 1;
+            elements.btnNext.disabled = state.filteredCards.length <= 1;
 
-            // Reseta flip
             state.isFlipped = false;
             elements.card.classList.remove('flipped');
         }
 
         // ===== Flip do Card =====
         function flipCard() {
-            if (state.cards.length === 0) return;
+            if (state.filteredCards.length === 0) return;
             state.isFlipped = !state.isFlipped;
             elements.card.classList.toggle('flipped', state.isFlipped);
         }
 
         // ===== Navegação =====
         function nextCard() {
-            if (state.cards.length === 0) return;
-            state.currentIndex = (state.currentIndex + 1) % state.cards.length;
+            if (state.filteredCards.length === 0) return;
+            state.currentIndex = (state.currentIndex + 1) % state.filteredCards.length;
             render();
         }
 
         function prevCard() {
-            if (state.cards.length === 0) return;
-            state.currentIndex = (state.currentIndex - 1 + state.cards.length) % state.cards.length;
+            if (state.filteredCards.length === 0) return;
+            state.currentIndex = (state.currentIndex - 1 + state.filteredCards.length) % state.filteredCards.length;
+            render();
+        }
+
+        // ===== Embaralhar =====
+        function shuffleCards() {
+            if (state.filteredCards.length <= 1) return;
+            
+            // Fisher-Yates shuffle
+            for (let i = state.filteredCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.filteredCards[i], state.filteredCards[j]] = [state.filteredCards[j], state.filteredCards[i]];
+            }
+            
+            state.currentIndex = 0;
             render();
         }
 
@@ -593,15 +806,15 @@
             state.editingId = editingId;
 
             if (editingId !== null) {
-                // Modo edição
                 const card = state.cards.find(c => c.id === editingId);
                 if (!card) return;
                 elements.modalTitle.textContent = 'Editar Card';
+                elements.categoryInput.value = card.category;
                 elements.frontInput.value = card.front;
                 elements.backInput.value = card.back;
             } else {
-                // Modo criação
                 elements.modalTitle.textContent = 'Novo Card';
+                elements.categoryInput.value = 'pre-socratic';
                 elements.frontInput.value = '';
                 elements.backInput.value = '';
             }
@@ -617,89 +830,102 @@
         }
 
         // ===== CRUD =====
-        function saveCard(front, back) {
+        function saveCard(category, front, back) {
             const trimmedFront = front.trim();
             const trimmedBack = back.trim();
 
             if (!trimmedFront || !trimmedBack) {
-                alert('Por favor, preencha ambos os campos.');
+                alert('Por favor, preencha todos os campos.');
                 return;
             }
 
             if (state.editingId !== null) {
-                // Atualiza card existente
                 const card = state.cards.find(c => c.id === state.editingId);
                 if (card) {
+                    card.category = category;
                     card.front = trimmedFront;
                     card.back = trimmedBack;
                 }
             } else {
-                // Cria novo card
                 const newId = state.cards.length > 0
                     ? Math.max(...state.cards.map(c => c.id)) + 1
                     : 1;
                 state.cards.push({
                     id: newId,
+                    category: category,
                     front: trimmedFront,
                     back: trimmedBack
                 });
-                state.currentIndex = state.cards.length - 1;
             }
 
             saveCards();
-            render();
+            applyFilters();
             closeModal();
         }
 
         function deleteCard() {
-            if (state.cards.length === 0) return;
+            if (state.filteredCards.length === 0) return;
 
             const confirmMsg = `Deseja realmente excluir o card ${state.currentIndex + 1}?`;
             if (!confirm(confirmMsg)) return;
 
-            state.cards.splice(state.currentIndex, 1);
+            const cardToDelete = state.filteredCards[state.currentIndex];
+            state.cards = state.cards.filter(c => c.id !== cardToDelete.id);
             saveCards();
 
-            // Ajusta índice após exclusão
-            if (state.currentIndex >= state.cards.length) {
-                state.currentIndex = Math.max(0, state.cards.length - 1);
+            if (state.currentIndex >= state.filteredCards.length - 1) {
+                state.currentIndex = Math.max(0, state.filteredCards.length - 2);
             }
 
-            render();
+            applyFilters();
         }
 
         // ===== Event Listeners =====
         elements.cardScene.addEventListener('click', flipCard);
         elements.btnPrev.addEventListener('click', prevCard);
         elements.btnNext.addEventListener('click', nextCard);
+        elements.btnShuffle.addEventListener('click', shuffleCards);
         elements.btnAdd.addEventListener('click', () => openModal(null));
+        elements.btnTheme.addEventListener('click', toggleTheme);
+        
         elements.btnEdit.addEventListener('click', () => {
-            if (state.cards.length > 0) {
-                openModal(state.cards[state.currentIndex].id);
+            if (state.filteredCards.length > 0) {
+                openModal(state.filteredCards[state.currentIndex].id);
             }
         });
+        
         elements.btnDelete.addEventListener('click', deleteCard);
         elements.btnCancel.addEventListener('click', closeModal);
 
         elements.cardForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            saveCard(elements.frontInput.value, elements.backInput.value);
+            saveCard(
+                elements.categoryInput.value,
+                elements.frontInput.value,
+                elements.backInput.value
+            );
         });
 
-        // Fecha modal ao clicar fora
+        elements.categoryFilter.addEventListener('change', (e) => {
+            state.currentFilter = e.target.value;
+            applyFilters();
+        });
+
+        elements.searchInput.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            applyFilters();
+        });
+
         elements.modal.addEventListener('click', (e) => {
             if (e.target === elements.modal) closeModal();
         });
 
-        // Atalhos de teclado
         document.addEventListener('keydown', (e) => {
-            // Fecha modal com ESC
             if (e.key === 'Escape' && elements.modal.classList.contains('active')) {
                 closeModal();
                 return;
             }
 
-            // Evita atalhos quando estiver digitando no modal
             if (elements.modal.classList.contains('active')) return;
 
             if (e.key === 'ArrowLeft') prevCard();
@@ -711,8 +937,9 @@
         });
 
         // ===== Inicialização =====
+        loadTheme();
         loadCards();
-        render();
+        applyFilters();
     </script>
 </body>
 </html>
