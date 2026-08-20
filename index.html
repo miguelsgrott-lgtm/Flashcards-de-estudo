@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards de Estudo</title>
+    <style>
+        /* ===== Reset e Variáveis ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg: #0f172a;
+            --bg-light: #1e293b;
+            --card-bg: #ffffff;
+            --text: #f1f5f9;
+            --text-dark: #1e293b;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg) 0%, #1e1b4b 100%);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        /* ===== Cabeçalho ===== */
+        header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.25rem);
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== Container Principal ===== */
+        main {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        /* ===== Barra de Progresso ===== */
+        .progress-container {
+            width: 100%;
+            text-align: center;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-light);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        /* ===== Card com Flip 3D ===== */
+        .card-scene {
+            width: 100%;
+            max-width: 500px;
+            height: 320px;
+            perspective: 1500px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: var(--text-dark);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .card-content {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            line-height: 1.5;
+            font-weight: 500;
+            word-wrap: break-word;
+        }
+
+        .card-hint {
+            position: absolute;
+            bottom: 1rem;
+            font-size: 0.75rem;
+            opacity: 0.5;
+        }
+
+        /* ===== Controles ===== */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Responsividade ===== */
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem 0.75rem;
+            }
+
+            .card-scene {
+                height: 280px;
+            }
+
+            .card-face {
+                padding: 1.5rem;
+            }
+
+            .btn {
+                padding: 0.65rem 1.1rem;
+                font-size: 0.85rem;
+            }
+
+            .modal {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header>
+        <h1>📚 Flashcards de Estudo</h1>
+        <button class="btn btn-primary" id="btnAdd">
+            <span>＋</span> Novo Card
+        </button>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main>
+        <!-- Barra de Progresso -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-text" id="progressText">Card 1 de 1</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Card com Flip 3D -->
+        <div class="card-scene" id="cardScene">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div class="card-label">Pergunta</div>
+                    <div class="card-content" id="frontContent">Carregando...</div>
+                    <div class="card-hint">Clique para ver a resposta</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-label">Resposta</div>
+                    <div class="card-content" id="backContent">...</div>
+                    <div class="card-hint">Clique para voltar</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles de Navegação -->
+        <div class="controls">
+            <button class="btn btn-secondary" id="btnPrev">← Anterior</button>
+            <button class="btn btn-secondary" id="btnNext">Próximo →</button>
+        </div>
+
+        <!-- Ações do Card -->
+        <div class="action-buttons">
+            <button class="btn btn-secondary" id="btnEdit">✏️ Editar</button>
+            <button class="btn btn-danger" id="btnDelete">🗑️ Excluir</button>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <h2>Nenhum card ainda</h2>
+            <p>Clique em "Novo Card" para começar a estudar!</p>
+        </div>
+    </main>
+
+    <!-- Modal de Edição/Criação -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2 id="modalTitle">Novo Card</h2>
+            <form id="cardForm">
+                <div class="form-group">
+                    <label for="frontInput">Pergunta (Frente)</label>
+                    <textarea id="frontInput" placeholder="Digite a pergunta..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="backInput">Resposta (Verso)</label>
+                    <textarea id="backInput" placeholder="Digite a resposta..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================
+           APLICATIVO DE FLASHCARDS - JavaScript Puro
+           ===================================================== */
+
+        // ===== Chave do localStorage =====
+        const STORAGE_KEY = 'flashcards_data';
+
+        // ===== Estado da Aplicação =====
+        const state = {
+            cards: [],
+            currentIndex: 0,
+            isFlipped: false,
+            editingId: null // null = criando novo, número = editando existente
+        };
+
+        // ===== Massa de Teste (Flashcards de Exemplo) =====
+        const defaultCards = [
+            {
+                id: 1,
+                front: 'O que é o DOM (Document Object Model)?',
+                back: 'É uma interface de programação que representa a estrutura de um documento HTML como uma árvore de objetos, permitindo que scripts manipulem conteúdo, estrutura e estilo dinamicamente.'
+            },
+            {
+                id: 2,
+                front: 'Qual a diferença entre "let", "const" e "var"?',
+                back: '"var" tem escopo de função e sofre hoisting. "let" tem escopo de bloco e pode ser reatribuído. "const" também tem escopo de bloco, mas não pode ser reatribuído (embora objetos possam ter propriedades modificadas).'
+            },
+            {
+                id: 3,
+                front: 'O que é Flexbox no CSS?',
+                back: 'É um modelo de layout unidimensional que facilita o alinhamento e distribuição de itens em um container, trabalhando com eixos principal e transversal para criar layouts responsivos de forma eficiente.'
+            }
+        ];
+
+        // ===== Elementos do DOM =====
+        const elements = {
+            card: document.getElementById('card'),
+            cardScene: document.getElementById('cardScene'),
+            frontContent: document.getElementById('frontContent'),
+            backContent: document.getElementById('backContent'),
+            progressText: document.getElementById('progressText'),
+            progressFill: document.getElementById('progressFill'),
+            progressContainer: document.getElementById('progressContainer'),
+            emptyState: document.getElementById('emptyState'),
+            btnPrev: document.getElementById('btnPrev'),
+            btnNext: document.getElementById('btnNext'),
+            btnAdd: document.getElementById('btnAdd'),
+            btnEdit: document.getElementById('btnEdit'),
+            btnDelete: document.getElementById('btnDelete'),
+            modal: document.getElementById('modal'),
+            modalTitle: document.getElementById('modalTitle'),
+            cardForm: document.getElementById('cardForm'),
+            frontInput: document.getElementById('frontInput'),
+            backInput: document.getElementById('backInput'),
+            btnCancel: document.getElementById('btnCancel')
+        };
+
+        // ===== Persistência de Dados =====
+        function loadCards() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    state.cards = JSON.parse(stored);
+                } else {
+                    // Primeira execução: carrega massa de teste
+                    state.cards = [...defaultCards];
+                    saveCards();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dados:', e);
+                state.cards = [...defaultCards];
+            }
+        }
+
+        function saveCards() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
+            } catch (e) {
+                console.error('Erro ao salvar dados:', e);
+            }
+        }
+
+        // ===== Renderização =====
+        function render() {
+            // Se não há cards, mostra estado vazio
+            if (state.cards.length === 0) {
+                elements.cardScene.style.display = 'none';
+                elements.progressContainer.style.display = 'none';
+                elements.btnPrev.style.display = 'none';
+                elements.btnNext.style.display = 'none';
+                elements.btnEdit.style.display = 'none';
+                elements.btnDelete.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+                return;
+            }
+
+            // Restaura visibilidade dos elementos
+            elements.cardScene.style.display = '';
+            elements.progressContainer.style.display = '';
+            elements.btnPrev.style.display = '';
+            elements.btnNext.style.display = '';
+            elements.btnEdit.style.display = '';
+            elements.btnDelete.style.display = '';
+            elements.emptyState.style.display = 'none';
+
+            // Garante índice válido
+            if (state.currentIndex >= state.cards.length) {
+                state.currentIndex = 0;
+            }
+            if (state.currentIndex < 0) {
+                state.currentIndex = state.cards.length - 1;
+            }
+
+            const current = state.cards[state.currentIndex];
+
+            // Atualiza conteúdo do card
+            elements.frontContent.textContent = current.front;
+            elements.backContent.textContent = current.back;
+
+            // Atualiza progresso
+            elements.progressText.textContent = `Card ${state.currentIndex + 1} de ${state.cards.length}`;
+            const percent = (state.cards.length > 0)
+                ? ((state.currentIndex + 1) / state.cards.length) * 100
+                : 0;
+            elements.progressFill.style.width = percent + '%';
+
+            // Habilita/desabilita botões de navegação
+            elements.btnPrev.disabled = state.cards.length <= 1;
+            elements.btnNext.disabled = state.cards.length <= 1;
+
+            // Reseta flip
+            state.isFlipped = false;
+            elements.card.classList.remove('flipped');
+        }
+
+        // ===== Flip do Card =====
+        function flipCard() {
+            if (state.cards.length === 0) return;
+            state.isFlipped = !state.isFlipped;
+            elements.card.classList.toggle('flipped', state.isFlipped);
+        }
+
+        // ===== Navegação =====
+        function nextCard() {
+            if (state.cards.length === 0) return;
+            state.currentIndex = (state.currentIndex + 1) % state.cards.length;
+            render();
+        }
+
+        function prevCard() {
+            if (state.cards.length === 0) return;
+            state.currentIndex = (state.currentIndex - 1 + state.cards.length) % state.cards.length;
+            render();
+        }
+
+        // ===== Modal =====
+        function openModal(editingId = null) {
+            state.editingId = editingId;
+
+            if (editingId !== null) {
+                // Modo edição
+                const card = state.cards.find(c => c.id === editingId);
+                if (!card) return;
+                elements.modalTitle.textContent = 'Editar Card';
+                elements.frontInput.value = card.front;
+                elements.backInput.value = card.back;
+            } else {
+                // Modo criação
+                elements.modalTitle.textContent = 'Novo Card';
+                elements.frontInput.value = '';
+                elements.backInput.value = '';
+            }
+
+            elements.modal.classList.add('active');
+            setTimeout(() => elements.frontInput.focus(), 100);
+        }
+
+        function closeModal() {
+            elements.modal.classList.remove('active');
+            state.editingId = null;
+            elements.cardForm.reset();
+        }
+
+        // ===== CRUD =====
+        function saveCard(front, back) {
+            const trimmedFront = front.trim();
+            const trimmedBack = back.trim();
+
+            if (!trimmedFront || !trimmedBack) {
+                alert('Por favor, preencha ambos os campos.');
+                return;
+            }
+
+            if (state.editingId !== null) {
+                // Atualiza card existente
+                const card = state.cards.find(c => c.id === state.editingId);
+                if (card) {
+                    card.front = trimmedFront;
+                    card.back = trimmedBack;
+                }
+            } else {
+                // Cria novo card
+                const newId = state.cards.length > 0
+                    ? Math.max(...state.cards.map(c => c.id)) + 1
+                    : 1;
+                state.cards.push({
+                    id: newId,
+                    front: trimmedFront,
+                    back: trimmedBack
+                });
+                state.currentIndex = state.cards.length - 1;
+            }
+
+            saveCards();
+            render();
+            closeModal();
+        }
+
+        function deleteCard() {
+            if (state.cards.length === 0) return;
+
+            const confirmMsg = `Deseja realmente excluir o card ${state.currentIndex + 1}?`;
+            if (!confirm(confirmMsg)) return;
+
+            state.cards.splice(state.currentIndex, 1);
+            saveCards();
+
+            // Ajusta índice após exclusão
+            if (state.currentIndex >= state.cards.length) {
+                state.currentIndex = Math.max(0, state.cards.length - 1);
+            }
+
+            render();
+        }
+
+        // ===== Event Listeners =====
+        elements.cardScene.addEventListener('click', flipCard);
+        elements.btnPrev.addEventListener('click', prevCard);
+        elements.btnNext.addEventListener('click', nextCard);
+        elements.btnAdd.addEventListener('click', () => openModal(null));
+        elements.btnEdit.addEventListener('click', () => {
+            if (state.cards.length > 0) {
+                openModal(state.cards[state.currentIndex].id);
+            }
+        });
+        elements.btnDelete.addEventListener('click', deleteCard);
+        elements.btnCancel.addEventListener('click', closeModal);
+
+        elements.cardForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveCard(elements.frontInput.value, elements.backInput.value);
+        });
+
+        // Fecha modal ao clicar fora
+        elements.modal.addEventListener('click', (e) => {
+            if (e.target === elements.modal) closeModal();
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            // Fecha modal com ESC
+            if (e.key === 'Escape' && elements.modal.classList.contains('active')) {
+                closeModal();
+                return;
+            }
+
+            // Evita atalhos quando estiver digitando no modal
+            if (elements.modal.classList.contains('active')) return;
+
+            if (e.key === 'ArrowLeft') prevCard();
+            else if (e.key === 'ArrowRight') nextCard();
+            else if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                flipCard();
+            }
+        });
+
+        // ===== Inicialização =====
+        loadCards();
+        render();
+    </script>
+</body>
+</html>
